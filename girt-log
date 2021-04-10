@@ -1,0 +1,20 @@
+#!/bin/dash
+
+# girt-log: prints a line for every commit made to the repository.
+
+# Raises error if there isn't a girt repo
+if ! test -d ".girt"
+then
+    echo "girt-log: error: girt repository directory .girt not found"
+    exit 1
+fi
+
+# Raises error if there aren't any commits
+if test $(ls -l .girt/master/commits/ | sed '1d' | wc -l) -eq 0
+then
+    echo "girt-log: error: your repository does not have any commits yet"
+    exit 1
+fi
+
+# Outputs the log file
+cat ".girt/master/commits/log.txt" | sort -r

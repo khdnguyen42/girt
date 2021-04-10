@@ -1,0 +1,115 @@
+#!/bin/dash
+
+# girt-rm: removes a file from the index, or from the current directory and the index.
+
+# Raises error if there isn't a girt repo
+if ! test -d ".girt"
+then
+    echo "girt-rm: error: girt repository directory .girt not found"
+    exit 1
+fi
+
+# Exits if there aren't any arguments
+if test $# -eq 0
+then
+    echo "usage: girt-rm [--force] [--cached] <filenames>"
+    exit 1
+fi
+
+# Flag for arguments
+arguments=0
+cachedflag=0
+forceflag=0
+
+# Last commit
+commit=$(ls .girt/master/commits/ | sed "s/[A-Za-z ]//g" | sort -r | head -1)
+
+# Loops through the arguments
+for arg in $@
+do
+    # tests for cached flag
+    if test $arg = "--cached"
+    then
+        cachedflag=1
+        arguments=1
+        continue
+    #tests for force flag
+    elif test $arg = "--force"
+    then
+        forceflag=1
+        arguments=1
+        continue
+    fi
+
+    # Normal rm no flag
+    if test $arguments -eq 0
+    then
+        if test -e ".girt/index/$arg" && test -e $arg && ! test -f ".girt/master/commits/$commit/$arg"
+        then
+            echo "girt-rm: error: '$arg' has staged changes in the index"
+            exit 1
+        fi 
+
+        if ! test -e ".girt/index/$arg"
+        then
+            echo "girt-rm: error: '$arg' is not in the girt repository"
+            exit 1
+        fi
+
+        if ! diff -N $arg ".girt/index/$arg" >/dev/null && diff -N ".girt/index/$arg" ".girt/master/commits/$commit/$arg" >/dev/null 
+        then
+            echo "girt-rm: error: '$arg' in the repository is different to the working file" 
+            exit 1
+        fi
+
+        if ! diff -N $arg ".girt/index/$arg" >/dev/null && ! diff -N ".girt/index/$arg" ".girt/master/commits/$commit/$arg" >/dev/null && ! diff -N $arg ".girt/master/commits/$commit/$arg" >/dev/null
+        then
+            echo "girt-rm: error: '$arg' in index is different to both to the working file and the repository"
+            exit 1
+        fi
+
+        if ! diff -N ".girt/index/$arg" ".girt/master/commits/$commit/$arg"  >/dev/null
+        then
+            echo "girt-rm: error: '$arg' has staged changes in the index"
+            exit 1    
+        fi
+
+        rm ".girt/index/$arg"
+        rm $arg
+
+    # both flags
+    elif test $cachedflag -eq 1 && test $forceflag -eq 1 
+    then
+        rm ".girt/index/$arg"
+
+    # --cached flag
+    elif test $cachedflag -eq 1
+    then
+        if ! test -e ".girt/index/$arg"
+        then
+            echo "girt-rm: error: '$arg' is not in the girt repository"
+            exit 1
+        fi
+        # differences with repo or index and the file 
+        if test -e $arg  && ! diff -N $arg ".girt/index/$arg" >/dev/null && ! diff -N ".girt/index/$arg" ".girt/master/commits/$commit/$arg"  >/dev/null && ! diff -N "$arg" ".girt/master/commits/$commit/$arg"  >/dev/null
+        then
+            echo "girt-rm: error: '$arg' in index is different to both to the working file and the repository" 
+            exit 1
+        fi
+
+        rm ".girt/index/$arg"
+
+    # --force
+    elif test $forceflag -eq 1
+    then
+        if ! test -e ".girt/index/$arg"
+        then
+            echo "girt-rm: error: '$arg' is not in the girt repository"
+            exit 1
+        fi
+
+        rm ".girt/index/$arg"
+        rm $arg
+    fi
+
+done

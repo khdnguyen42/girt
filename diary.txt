@@ -1,0 +1,41 @@
+z5310143 Diary for COMP2041 Assignment 1
+
+- 18/3/21: 9:50am-10:05am (Reading / Understanding spec)
+    - Started diary entries and first files
+    
+- 23/3/21: 10:00am-11:06am (Completed girt-init)
+    - Completed girt-init with future implementation for branching
+
+- 23/3/21: 11:10am-11:34am (Completed girt-add)
+    - Completed girt-add
+    - Added comments to existing files
+
+- 23/3/21: 11:34am-13:06pm (Completed girt-commit)
+    - Completed girt-commit (I think)
+
+- 23/3/21: 13:10pm-14:12pm (Completed subset 0)
+    - Completed girt-show & log
+    - Fixed girt-commit
+
+- 23/3/21: 18:00pm-18:39pm (Started subset 1)
+    - Added option for -a in girt-commit
+
+- 30/3/21: 18:00pm-18:37pm (Worked on girt-rm)
+    - Fixed girt-add
+    - Attempted girt-rm & commit
+
+- 3/4/21: 20:00pm-21:15pm (Completed girt-rm)
+    - Completed girt-rm
+
+- 3/4/21: 21:15pm-22:13pm (Started on girt-status)
+    - Worked on girt-status
+    - Fixed girt-rm options
+
+- 4/4/21 20:49pm-21:28pm (Finished girt-status)
+    - Fixed on girt-status
+
+- 4/4/21 21:30pm-10:15pm (Added comments to all files)
+    - Adding comments to girt-*
+    
+- 4/4/21 10:15pm-11:26pm (Added test00-09)
+    - Added tests

@@ -1,0 +1,32 @@
+#!/bin/dash
+
+# girt-add: adds the contents of one or more files to the index.
+
+# Raises error if there isn't a girt repo
+if ! test -d ".girt"
+then
+    echo "girt-add: error: girt repository directory .girt not found"
+    exit 1
+fi
+
+# Exits if there aren't any arguments
+if test $# -eq 0
+then
+    echo "usage: girt-add <filenames>"
+    exit 1
+fi
+
+# Loops through args and copies files into index
+for file in "$@"
+do
+    if ! test -e "$file" && ! test -e ".girt/index/$file"
+    then
+        echo "girt-add: error: can not open '$file'"
+    elif ! test -e "$file" && test -e ".girt/index/$file"
+    then
+        rm ".girt/index/$file"
+
+    else 
+        cp $file ".girt/index"
+    fi
+done

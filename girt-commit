@@ -1,0 +1,100 @@
+#!/bin/dash
+
+# girt-commit: saves a copy of all files in the index to the repository.
+
+# Raises error if there isn't a girt repo
+if ! test -d ".girt"
+then
+    echo "girt-commit: error: girt repository directory .girt not found"
+    exit 1
+fi
+
+# Exits if there isn't a commit-message
+if test $# -lt 2
+then
+    echo "usage: girt-commit [-a] -m commit-message"
+    exit 1
+fi
+
+# Extracts commit number
+commit_number=$(ls -l .girt/master/commits/ | sed '1d' | wc -l)
+
+# Removes log file from the count
+if test -e ".girt/master/commits/log.txt"
+then
+    commit_number=$((commit_number - 1))
+fi
+
+# Extracts previous commit number
+prev_commit=$((commit_number - 1))
+
+# Extracts the commit message
+commit_message=$(echo "$@" | sed 's/^-[am]* //' | sed  's/^-[am]* //')
+
+# Flag for whether a commit is needed or not
+commit_needed="false"
+
+
+# Grabs options for the flags -a -m
+while getopts ":am" option
+do
+    case ${option} in
+        a)
+            for indexfile in .girt/index/*
+            do
+                if test -f "${indexfile##*/}"
+                then
+                    cp "${indexfile##*/}" .girt/index
+                fi		
+            done
+            ;;
+        m)
+            ;;
+    esac
+done
+
+# If there aren't any commits yet
+if test $commit_number -eq 0  
+then
+    commit_needed="true"
+else
+    # check if theres a difference between ls of index and latest commit
+    if test "$( ls .girt/index/ )" != "$( ls .girt/master/commits/$prev_commit/ )"
+    then
+        commit_needed="true"
+        break;
+    fi
+
+    # Check if there are differences from the prev commit
+    for file in $(ls .girt/index/)
+    do
+        if test -e ".girt/master/commits/$prev_commit/$file"
+        then
+            if test $(cmp -s ".girt/index/$file" ".girt/master/commits/$prev_commit/$file";echo $?) -eq 0
+            then
+                continue
+            else
+                commit_needed="true"
+            fi
+        else
+            commit_needed="true"
+        fi
+    done
+fi
+
+# Makes the commit folders and copies files into repo
+if test "$commit_needed" = "true"
+then
+    mkdir -v -p ".girt/master/commits/$commit_number" >/dev/null 
+    echo "$commit_number $commit_message" >> ".girt/master/commits/log.txt"
+    if test -z "$(ls -A .girt/index/)"
+    then
+        echo "Committed as commit $commit_number"
+        exit 1;
+    fi
+    cp .girt/index/* .girt/master/commits/$commit_number/
+    echo "Committed as commit $commit_number"
+elif test "$commit_needed" = "false"
+then
+    echo "nothing to commit"
+fi

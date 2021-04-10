@@ -1,0 +1,17 @@
+#!/bin/dash
+
+# girt-init: creates an empty Girt repository.
+
+# Raises error if girt exists
+# Creates .girt directory & sub-directories with master branch
+if test -d ".girt"
+then
+    echo "girt-init: error: .girt already exists"
+    exit 1
+else
+    mkdir -v -p ".girt" >/dev/null 
+    mkdir -v -p ".girt/index" >/dev/null 
+    mkdir -v -p ".girt/master" >/dev/null 
+    mkdir -v -p ".girt/master/commits" >/dev/null 
+    echo "Initialized empty girt repository in .girt"
+fi

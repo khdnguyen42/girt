@@ -1,0 +1,101 @@
+#!/bin/dash
+
+# girt-status: shows the status of files in the current directory, the index, and the repository.
+
+# Raises error if there isn't a girt repo
+if ! test -d ".girt"
+then
+    echo "girt-status: error: girt repository directory .girt not found"
+    exit 1
+fi
+
+# Last commit
+commit=$(ls .girt/master/commits/ | sed "s/[A-Za-z ]//g" | sort -r | head -1)
+
+
+# All the files in the working directory, index and repo
+files=$(ls  ./  .girt/index/ .girt/master/commits/$commit/ | grep -E -v '/:|/' | sort | uniq) 
+
+# Loop through all the files ^
+
+for file in $files
+do 
+    # testing if the file is deleted
+    if test -e ".girt/index/$file" && ! test -e $file && test -e ".girt/master/commits/$commit/$file"
+    then
+        echo "$file - file deleted"
+        continue
+    fi
+
+    # if the file is added to the index but changed in working directory
+    if ! test -e ".girt/master/commits/$commit/$file" && test -e .girt/index/"$file" && test -e "$file" && ! diff .girt/index/"$file" "$file" >/dev/null
+    then
+        echo "$file - added to index, file changed"
+        continue
+    fi
+
+    # if the file is added to the index but is deleted from working directory
+    if ! test -e ".girt/master/commits/$commit/$file" && test -e .girt/index/"$file" && ! test -e "$file"
+    then
+        echo "$file - added to index, file deleted"
+        continue
+    fi
+
+    # if the file is only in the index
+    if ! test -e ".girt/master/commits/$commit/$file" && test -e ".girt/index/$file"
+    then
+        echo "$file - added to index"
+        continue
+    fi
+
+    # if the file is removed from the index and working directory
+    if test -e ".girt/master/commits/$commit/$file" && ! test -e $file && ! test -e .girt/index/"$file"
+    then
+        echo "$file - deleted"
+        continue
+    fi
+
+    # if the file from working directory doesn't exist in the index
+    if test -e $file && ! test -e .girt/index/"$file"
+    then
+        echo "$file - untracked"
+        continue
+    fi
+
+    # if the file exists in repo, index and working directory
+    if test -e ".girt/master/commits/$commit/$file" && test -e ".girt/index/$file" && test -e "$file" 
+    then
+
+        # its the same as the repo
+        if diff ".girt/master/commits/$commit/$file" .girt/index/"$file" >/dev/null && diff .girt/index/"$file" $file >/dev/null
+        then
+            echo "$file - same as repo"
+            continue
+        fi
+
+        # the indexed filed and working directory file are different
+        if diff ".girt/master/commits/$commit/$file" .girt/index/"$file" >/dev/null &&
+           ! diff .girt/index/"$file" "$file" >/dev/null
+        then
+            echo "$file - file changed, changes not staged for commit"
+            continue
+        fi
+
+        # the repo and index are different with a commit ready
+        if ! diff ".girt/master/commits/$commit/$file" .girt/index/"$file" >/dev/null && diff .girt/index/"$file" "$file" >/dev/null
+        then
+            echo "$file - file changed, changes staged for commit"
+            continue
+        fi
+
+        # changes with index and working directory
+        # and changes with repo and working directory
+        if ! diff .girt/index/"$file" "$file" >/dev/null && \
+           ! diff .girt/master/commits/$commit/"$file" "$file" >/dev/null
+        then
+            echo "$file - file changed, different changes staged for commit"
+            continue
+        fi
+    fi
+
+done
